@@ -39,5 +39,5 @@ Your response must only be the python code. Do not include any other text in you
 
 def build_QGen_User_Prompt(num_questions: int, course_content: str):
     num_q = str(num_questions) 
-    prompt = f'''Please generate {num_q} questions based on the following content: {course_content}'''
+    prompt = f'''Please generate {num_q} questions based on the following content (ignoring bibliography and references): {course_content}'''
     return prompt

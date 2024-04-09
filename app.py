@@ -26,6 +26,49 @@ from rag.examgen import generate_questions_withTopic, GeneratedQuestion
 from rag.utils import get_llm
 
 
+# Session state
+default_values = {
+    'question_list': None,
+    'question_idx': 0, 
+    'current_question': 0, 
+    'score': 0, 
+    'selected_option': None, 
+    'correct_option': None,
+    'answer_submitted': False,
+    'taking_quiz': False
+    }
+for key, value in default_values.items():
+    st.session_state.setdefault(key, value)
+
+# Session state reset
+def restart_session():
+    st.session_state.question_list = None
+    st.session_state.question_idx = 0
+    st.session_state.score = 0
+    st.session_state.selected_option = None
+    st.session_state.correct_option = None
+    st.session_state.answer_submitted = False    
+    st.session_state.taking_quiz = False 
+
+
+def submit_answer():
+    if st.session_state.selected_option is not None:
+        st.session_state.answer_submitted = True
+        if st.session_state.selected_option == st.session_state.correct_option:
+            st.session_state.score += 1
+    else:    
+        st.warning("Please select an option before submitting.")  
+
+def next_question():
+    st.session_state.question_idx += 1
+    st.session_state.selected_option = None
+    st.session_state.answer_submitted = False
+
+def start_quiz():
+    st.session_state.taking_quiz = True
+
+
+
 EMBEDDING = "openai"
 VECTOR_STORE = "faiss"
 MODEL_LIST = ["gpt-3.5-turbo-0125", "gpt-4-0125-preview"]
@@ -157,7 +200,7 @@ if uploaded_file:
 st.subheader('3. Start asking and answering questions')
 ##################################################
 
-tabQA, tabQuestions = st.tabs(["❔ Question Answering", "📖 Exam Questions"])
+tabQuestions, tabQA = st.tabs(["📖 Exam Questions", "❔ Question Answering"])
 
 ##########################
 # Exam Question TAB
@@ -203,33 +246,79 @@ with tabQuestions:
         num_questions = st.number_input('Number of questions:', min_value=1, max_value=10, value=5, step=1)
         gen_questions = st.form_submit_button("Generate!")               
 
-
     if gen_questions:
 
-        llm = get_llm(model=model, openai_api_key=openai_api_key, temperature=model_temp)
+        # Generate questions
+        if not st.session_state.taking_quiz: # It not already taking the quiz
 
-        if questions_topic == 'Yes':
-            result = generate_questions_withTopic(
-                num_questions=num_questions,
-                questions_type=questions_type,
-                questions_topic=selected_topic,
-                difficulty=questions_difficulty,
-                folder_index=folder_index,
-                llm=llm, 
-                num_chunks=5)
+            start_quiz()
+
+            llm = get_llm(model=model, openai_api_key=openai_api_key, temperature=model_temp)
+
+            if questions_topic == 'Yes':
+                list_of_questions = generate_questions_withTopic(
+                    num_questions=num_questions,
+                    questions_type=questions_type,
+                    questions_topic=selected_topic,
+                    difficulty=questions_difficulty,
+                    folder_index=folder_index,
+                    llm=llm, 
+                    num_chunks=5)
             
-            # Check for errors
-            if len(result) == 1: 
-                if result[0].error: 
-                    st.warning("Error in generation: " + result[0].gen_text)
-                    st.stop()
+                # Check for errors
+                if len(list_of_questions) == 1: 
+                    if list_of_questions[0].error: 
+                        st.warning("Error in generation: " + list_of_questions[0].gen_text)
+                        st.stop()
+                
+                st.session_state.question_list = list_of_questions
+            else:        
+                st.write("you must select a topic")
+
+    # Display questions
+    if st.session_state.question_list:
+        #Progress Bar and Score Display
+        cur_progress = (st.session_state.question_idx + 1) / len(st.session_state.question_list)
+        st.metric(label="Score", value=f"{st.session_state.score} / {len(st.session_state.question_list)}")
+        st.progress(cur_progress)
+
+        #Displaying the Question and Answer Options
+        question_item = st.session_state.question_list[st.session_state.question_idx]
+        st.subheader(f"Question {st.session_state.question_idx + 1}")
+        st.title(f"{question_item.question_text}") 
+
+        #Answer Selection and Feedback
+        if st.session_state.answer_submitted:
+            for i, option in enumerate(question_item.options):
+                label = option
+                if option == question_item.correct_option:
+                    st.success(f"{label} (Correct answer)")
+                elif option == st.session_state.selected_option:
+                    st.error(f"{label} (Incorrect answer)")
+                else:
+                    st.write(label)
+        else:
+            for i, option in enumerate(question_item.options):
+                if st.button(option, key=i, use_container_width=True):
+                    st.session_state.selected_option = option
             
-            # Display questions
-            for question in result:
-                st.markdown("---")
-                st.markdown("### " + question.question_text)
-                for opt in question.options:
-                    st.markdown("#### " + opt)
+        #Submission Button and Navigation
+        if st.session_state.answer_submitted:
+            if st.session_state.question_idx < len(st.session_state.question_list) - 1:
+                st.button('Next', on_click=next_question)
+            else:
+                st.write(f"Quiz completed! Your score is: {st.session_state.score} / {len(st.session_state.question_list)}")
+                if st.button('Restart', on_click=restart_session):
+                    pass
+        else:
+            if st.session_state.question_idx < len(st.session_state.question_list):
+                st.button('Submit', on_click=submit_answer)
+
+            # for question in list_of_questions:
+            #     st.markdown("---")
+            #     st.markdown("### " + question.question_text)
+            #     for opt in question.options:
+            #         st.markdown("#### " + opt)
                 # choices = ["Please select an answer"]
                 # choices = choices + [ans for ans in question.options_ids]  
                 # user_guess = st.selectbox('Answer:', choices, key=question.id)
@@ -241,15 +330,13 @@ with tabQuestions:
                 #         st.markdown("### Ops! 😭 Your answer is wrong.")
                 #         st.markdown("The correct answer is: " + question.correct_option)
                 #         st.markdown("The explanation is: " + question.explanation)
-                with st.expander("Solution"):
-                    st.markdown("##### The correct answer is: " + question.correct_option)
-                    st.markdown("##### The explanation is: " + question.explanation)
-                    st.markdown("##### The source is: " + question.source)
-                    st.markdown("##### Original text is: " + question.excerpt)
+                # with st.expander("Solution"):
+                #     st.markdown("##### The correct answer is: " + question.correct_option)
+                #     st.markdown("##### The explanation is: " + question.explanation)
+                #     st.markdown("##### The source is: " + question.source)
+                #     st.markdown("##### Original text is: " + question.excerpt)
 
 
-        else:        
-            st.write("you must select a topic")
 
 ##########################
 # Question & Answering TAB
