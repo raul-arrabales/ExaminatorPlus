@@ -1,5 +1,7 @@
 
 # Partially based on https://github.com/mmz-001/knowledge_gpt/tree/main
+# Partually based on https://medium.com/@hugoalmeidamoreira/a-streamlit-quizz-template-505ae87c387f 
+
 
 import os
 
@@ -25,7 +27,7 @@ from rag.qa import query_folder
 from rag.examgen import generate_questions_withTopic, GeneratedQuestion
 from rag.utils import get_llm
 
-
+# MARK: Session State 
 # Session state
 default_values = {
     'question_list': None,
@@ -33,6 +35,7 @@ default_values = {
     'current_question': 0, 
     'score': 0, 
     'selected_option': None, 
+    'selected_option_id': None, 
     'correct_option': None,
     'answer_submitted': False,
     'taking_quiz': False
@@ -46,6 +49,7 @@ def restart_session():
     st.session_state.question_idx = 0
     st.session_state.score = 0
     st.session_state.selected_option = None
+    st.session_state.selected_option_id = None
     st.session_state.correct_option = None
     st.session_state.answer_submitted = False    
     st.session_state.taking_quiz = False 
@@ -54,7 +58,7 @@ def restart_session():
 def submit_answer():
     if st.session_state.selected_option is not None:
         st.session_state.answer_submitted = True
-        if st.session_state.selected_option == st.session_state.correct_option:
+        if st.session_state.selected_option_id == st.session_state.correct_option:
             st.session_state.score += 1
     else:    
         st.warning("Please select an option before submitting.")  
@@ -62,13 +66,14 @@ def submit_answer():
 def next_question():
     st.session_state.question_idx += 1
     st.session_state.selected_option = None
+    st.session_state.selected_option_id = None
     st.session_state.answer_submitted = False
 
 def start_quiz():
     st.session_state.taking_quiz = True
 
 
-
+# MARK: GenAI Config
 EMBEDDING = "openai"
 VECTOR_STORE = "faiss"
 MODEL_LIST = ["gpt-3.5-turbo-0125", "gpt-4-0125-preview"]
@@ -82,6 +87,7 @@ CHUNK_OVERLAPS = [0,20,30,40,50]
 
 st.set_page_config(page_title="Examinator Plus", page_icon="📖", layout="wide")
 
+# MARK: Page PW
 def check_password():
     """Returns `True` if the user had the correct password."""
 
@@ -117,7 +123,7 @@ bootstrap_caching()
 
 sidebar()
 
-
+# MARK: AI Settings
 ##################################################
 st.subheader('1. Configure AI setting (optional)')
 ##################################################
@@ -162,6 +168,7 @@ if not openai_api_key:
         " https://platform.openai.com/account/api-keys."
     )
 
+# MARK: Select Files
 ##################################################
 st.subheader('2. Select your course contents')
 ##################################################
@@ -202,6 +209,7 @@ st.subheader('3. Start asking and answering questions')
 
 tabQuestions, tabQA = st.tabs(["📖 Exam Questions", "❔ Question Answering"])
 
+# MARK: Exam Questions Tab
 ##########################
 # Exam Question TAB
 ##########################
@@ -269,7 +277,7 @@ with tabQuestions:
                 if len(list_of_questions) == 1: 
                     if list_of_questions[0].error: 
                         st.warning("Error in generation: " + list_of_questions[0].gen_text)
-                        st.stop()
+                        #st.stop()
                 
                 st.session_state.question_list = list_of_questions
             else:        
@@ -291,16 +299,18 @@ with tabQuestions:
         if st.session_state.answer_submitted:
             for i, option in enumerate(question_item.options):
                 label = option
-                if option == question_item.correct_option:
+                option_id = question_item.options_ids[i]
+                if option_id == question_item.correct_option:
                     st.success(f"{label} (Correct answer)")
-                elif option == st.session_state.selected_option:
+                elif option_id == st.session_state.selected_option:
                     st.error(f"{label} (Incorrect answer)")
                 else:
                     st.write(label)
         else:
             for i, option in enumerate(question_item.options):
                 if st.button(option, key=i, use_container_width=True):
-                    st.session_state.selected_option = option
+                    st.session_state.selected_option = option 
+                    st.session_state.selected_option_id = question_item.options_ids[i]
             
         #Submission Button and Navigation
         if st.session_state.answer_submitted:
@@ -337,7 +347,7 @@ with tabQuestions:
                 #     st.markdown("##### Original text is: " + question.excerpt)
 
 
-
+# MARK: Q&A Tab
 ##########################
 # Question & Answering TAB
 ##########################
