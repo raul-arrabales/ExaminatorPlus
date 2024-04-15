@@ -285,15 +285,18 @@ with tabQuestions:
 
     # Display questions
     if st.session_state.question_list:
-        #Progress Bar and Score Display
+        # Progress Bar and Score Display
         cur_progress = (st.session_state.question_idx + 1) / len(st.session_state.question_list)
         st.metric(label="Score", value=f"{st.session_state.score} / {len(st.session_state.question_list)}")
         st.progress(cur_progress)
 
-        #Displaying the Question and Answer Options
+        # Displaying the Question and Answer Options
         question_item = st.session_state.question_list[st.session_state.question_idx]
         st.subheader(f"Question {st.session_state.question_idx + 1}")
         st.title(f"{question_item.question_text}") 
+
+        # Update state with correct option for this question
+        st.session_state.correct_option = question_item.correct_option
 
         #Answer Selection and Feedback
         if st.session_state.answer_submitted:
