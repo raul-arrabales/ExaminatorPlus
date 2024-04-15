@@ -309,6 +309,14 @@ with tabQuestions:
                     st.error(f"{label} (Incorrect answer)")
                 else:
                     st.write(label)
+            # Print explanation, source and excerpt
+            st.markdown('---')
+            st.markdown('#### Explanation')
+            st.write(question_item.explanation)
+            st.markdown('#### Source')
+            st.write(question_item.source)
+            st.markdown('#### Excerpt')
+            st.write(question_item.excerpt)
         else:
             for i, option in enumerate(question_item.options):
                 if st.button(option, key=i, use_container_width=True):
