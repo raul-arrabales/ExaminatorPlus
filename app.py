@@ -135,11 +135,14 @@ with st.expander("Generative AI Advanced Options"):
     # - Stored as a streamlit secret
     # - As an os env vble (e.g. if usign a container)        
     # - Input by user in this text input of type password:
-    key_value = "sk-..."
-    if st.secrets["OPENAI_API_KEY"] is not None:
+    key_value = ""
+    try:
         key_value = st.secrets["OPENAI_API_KEY"]
-    elif os.environ.get("OPENAI_API_KEY", None) is not None:
-        key_value = os.environ.get("OPENAI_API_KEY")
+    except KeyError as e:        
+        if os.environ.get("OPENAI_API_KEY", None) is not None:
+            key_value = os.environ.get("OPENAI_API_KEY")
+        else:
+            key_value = "sk-..."
 
     api_key_input = st.text_input(        
         "OpenAI API Key",
