@@ -135,14 +135,18 @@ with st.expander("Generative AI Advanced Options"):
     # - Stored as a streamlit secret
     # - As an os env vble (e.g. if usign a container)        
     # - Input by user in this text input of type password:
+    key_value = "sk-..."
+    if st.secrets["OPENAI_API_KEY"] is not None:
+        key_value = st.secrets["OPENAI_API_KEY"]
+    elif os.environ.get("OPENAI_API_KEY", None) is not None:
+        key_value = os.environ.get("OPENAI_API_KEY")
+
     api_key_input = st.text_input(        
         "OpenAI API Key",
         type="password",
         placeholder="Paste your OpenAI API key here (sk-...)",
         help="You can get your API key from https://platform.openai.com/account/api-keys.", 
-        # My OpenAI key stored as a secret or a os env vble (if usign a container)
-        value = os.environ.get("OPENAI_API_KEY", None) or st.secrets["OPENAI_API_KEY"] 
-        # value=os.environ.get("OPENAI_API_KEY", None) or st.session_state.get("OPENAI_API_KEY", ""),
+        value = key_value
         )
     st.session_state["OPENAI_API_KEY"] = api_key_input
 
