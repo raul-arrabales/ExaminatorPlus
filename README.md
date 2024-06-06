@@ -8,6 +8,10 @@
 - FAISS for in-memory vector indexing. 
 
 
+### Sample question generated from my CV
+<hr>
+<img src="ExaminatorPlus_Example1.JPG" width=600>
+
 ### App in Streamlit Hub
 <hr>
 Try the app at https://examinatorplus.streamlit.app/ 
