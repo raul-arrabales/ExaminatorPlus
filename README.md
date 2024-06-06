@@ -7,11 +7,14 @@
 - OpenAI Chat Completion API for LLM-based generation (aka ChatGPT API).
 - FAISS for in-memory vector indexing. 
 
-
-### Sample question generated from my CV
+  
 <hr>
+### Sample question generated from my CV:
+
 <img src="ExaminatorPlus_Example1.JPG" width=800>
 
-### App in Streamlit Hub
+ 
 <hr>
+### App in Streamlit Hub
+
 Try the app at https://examinatorplus.streamlit.app/ 
