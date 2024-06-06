@@ -10,7 +10,7 @@
 
 ### Sample question generated from my CV
 <hr>
-<img src="ExaminatorPlus_Example1.JPG" width=600>
+<img src="ExaminatorPlus_Example1.JPG" width=800>
 
 ### App in Streamlit Hub
 <hr>
