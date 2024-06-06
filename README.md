@@ -1,8 +1,9 @@
 # Examinator Plus
 
-**Examinator Plus is an AI-Assisted App that generates exam questions**. It is written in Python and utilizes the following components: 
+**Examinator Plus is an AI-Assisted App that generates exam questions**. It is written in Python following a LLM-App RAG pattern and utilizes the following components: 
 - Streamlit for the web interface. 
 - Langchain for LLM-app orchestration and doc ingestion/chunking. 
+- Vanilla Python prompt processing for RAG (Retrieval Augmented Generation).
 - OpenAI ADA Embeddings for document vectorization.
 - OpenAI Chat Completion API for LLM-based generation (aka ChatGPT API).
 - FAISS for in-memory vector indexing. 

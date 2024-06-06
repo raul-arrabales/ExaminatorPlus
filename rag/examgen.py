@@ -2,15 +2,10 @@
 import ast 
 
 from typing import List
-
 from langchain.docstore.document import Document
-
 from langchain_openai import ChatOpenAI
-
 from langchain_core.messages import HumanMessage,SystemMessage
-
 from rag.vectorizing import FolderIndex
-
 from rag.prompts_qgen import build_QGen_System_Prompt,build_QGen_User_Prompt
 
 
