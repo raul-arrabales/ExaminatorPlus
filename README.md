@@ -9,12 +9,14 @@
 
   
 <hr>
+
 ### Sample question generated from my CV:
 
 <img src="ExaminatorPlus_Example1.JPG" width=800>
 
  
 <hr>
+
 ### App in Streamlit Hub
 
 Try the app at https://examinatorplus.streamlit.app/ 
